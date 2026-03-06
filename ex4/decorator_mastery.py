@@ -7,7 +7,7 @@ def spell_timer(func: callable) -> callable:
     def wrapper(*args, **kwargs):
         print(f"Casting {func.__name__}...")
         start = time.time()
-        result = func()
+        result = func(*args, **kwargs)
         end = time.time()
         print(f"Spell completed in {end - start} seconds")
         return result
@@ -18,16 +18,24 @@ def spell_timer(func: callable) -> callable:
 def power_validator(min_power: int) -> callable:
     def decorator(func: callable) -> callable:
         @wraps(func)
-        def wrapper(*args, **kwargs) -> object:
-            try:
-                power = args[0] if args else kwargs["power"]
-            except KeyError:
-                return "Missing power parameter"
-            if not isinstance(power, int):
+        def wrapper(*args, **kwargs):
+            if "power" in kwargs:
+                power = kwargs["power"]
+            elif len(args) == 3:
                 power = args[2]
-            if power >= min_power:
-                return func(*args, **kwargs)
-            return "Insufficient power for this spell"
+            elif len(args) == 1:
+                power = args[0]
+            else:
+                raise TypeError(
+                    "power_validator expects power in one of these forms:\n"
+                    "regular function : cast(power)\n"
+                    "class method     : cast(self, spell_name, power)\n"
+                    "keyword argument : cast(power=50)\n"
+                )
+
+            if power < min_power:
+                return "Insufficient power for this spell"
+            return func(*args, **kwargs)
 
         return wrapper
 
@@ -42,7 +50,10 @@ def retry_spell(max_attempts: int) -> callable:
                 try:
                     return func(*args, **kwargs)
                 except Exception:
-                    print("Spell failed, retrying...")
+                    print(
+                        f"Spell failed, retrying... (attempt "
+                        f"{attempt}/{max_attempts})"
+                    )
             return f"Spell casting failed after {max_attempts} attempts"
 
         return wrapper
