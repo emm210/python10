@@ -1,6 +1,7 @@
 from functools import wraps
 import time
 
+
 def spell_timer(func: callable) -> callable:
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -10,18 +11,26 @@ def spell_timer(func: callable) -> callable:
         end = time.time()
         print(f"Spell completed in {end - start} seconds")
         return result
+
     return wrapper
 
 
-
 def power_validator(min_power: int) -> callable:
-    def decorator(func):
+    def decorator(func: callable) -> callable:
         @wraps(func)
-        def wrapper(self, spell_name ,power, *arg, **kwargs):
-            if power < min_power:
-                return "Insufficient power for this spell"
-            return func(self, spell_name, power, *arg, **kwargs)
+        def wrapper(*args, **kwargs) -> object:
+            try:
+                power = args[0] if args else kwargs["power"]
+            except KeyError:
+                return "Missing power parameter"
+            if not isinstance(power, int):
+                power = args[2]
+            if power >= min_power:
+                return func(*args, **kwargs)
+            return "Insufficient power for this spell"
+
         return wrapper
+
     return decorator
 
 
@@ -33,9 +42,11 @@ def retry_spell(max_attempts: int) -> callable:
                 try:
                     return func(*args, **kwargs)
                 except Exception:
-                    print(f"Spell failed, retrying...")
+                    print("Spell failed, retrying...")
             return f"Spell casting failed after {max_attempts} attempts"
+
         return wrapper
+
     return decorator
 
 
@@ -47,24 +58,26 @@ class MageGuild:
         if not name.replace(" ", "").isalpha():
             return False
         return True
-    
-    @power_validator(min_power = 10)
+
+    @power_validator(min_power=10)
     def cast_spell(self, spell_name: str, power: int) -> str:
         return f"Successfully cast {spell_name} with {power} power"
 
+
 def main() -> None:
     print("\nTesting spell timer...")
+
     @spell_timer
     def fireball():
         return "Fireball cast!"
-    
+
     print(f"Result: {fireball()}")
     print("\nTesting MageGuild...")
     mageGuild = MageGuild()
     print(f"{mageGuild.validate_mage_name("Lightning")}")
     print(f"{mageGuild.validate_mage_name("Fireball_100")}")
-    print(f"{mageGuild.cast_spell("Lightning",15)}")
-    print(f"{mageGuild.cast_spell("Lightning",8)}")
+    print(f"{mageGuild.cast_spell("Lightning", 15)}")
+    print(f"{mageGuild.cast_spell("Lightning", 8)}")
 
 
 if __name__ == "__main__":
