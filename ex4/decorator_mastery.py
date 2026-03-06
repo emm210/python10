@@ -1,12 +1,10 @@
-from typing import Callable
 from functools import wraps
 import time
 
-def spell_timer(func: Callable) -> Callable:
+def spell_timer(func: callable) -> callable:
     @wraps(func)
-    def wrapper():
-        # code before
-        print(f"Casting {func.__name__}")
+    def wrapper(*args, **kwargs):
+        print(f"Casting {func.__name__}...")
         start = time.time()
         result = func()
         end = time.time()
@@ -16,7 +14,7 @@ def spell_timer(func: Callable) -> Callable:
 
 
 
-def power_validator(min_power: int) -> Callable:
+def power_validator(min_power: int) -> callable:
     def decorator(func):
         @wraps(func)
         def wrapper(self, spell_name ,power, *arg, **kwargs):
@@ -27,7 +25,7 @@ def power_validator(min_power: int) -> Callable:
     return decorator
 
 
-def retry_spell(max_attempts: int) -> Callable:
+def retry_spell(max_attempts: int) -> callable:
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
@@ -54,8 +52,8 @@ class MageGuild:
     def cast_spell(self, spell_name: str, power: int) -> str:
         return f"Successfully cast {spell_name} with {power} power"
 
-def main():
-    print("Testing spell timer...")
+def main() -> None:
+    print("\nTesting spell timer...")
     @spell_timer
     def fireball():
         return "Fireball cast!"
@@ -69,6 +67,5 @@ def main():
     print(f"{mageGuild.cast_spell("Lightning",8)}")
 
 
-main()
-
-
+if __name__ == "__main__":
+    main()
